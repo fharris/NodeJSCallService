@@ -1,0 +1,120 @@
+<% include partials/header %>
+
+<h1>FB Webhooks Authentication</h1>
+
+<form action="/results" method="GET">
+   <input type="text" id="myField" placeholder="search term" name="search" value=""> 
+   <input type="submit">
+</form>
+
+
+<script>
+
+   var global_page_access_token = "NoValueYet";    
+   var global_page_id = '750613235139928';
+
+
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '286533255163949',
+      cookie     : true,
+      xfbml      : true,
+      version    : 'v2.10'
+    });
+    //FB.AppEvents.logPageView();  
+    
+    FB.getLoginStatus(function(response) {
+        statusChangeCallback(response);
+    });
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+
+    function statusChangeCallback(response){
+        if (response.status === 'connected'){
+             console.log('logged and authenticated');
+             testGetAPI2();
+             console.log("global_page_access_token :", global_page_access_token);
+             testPostAPI2();
+             subscribeApp(global_page_id, global_page_access_token);
+             document.getElementById('myField').value = global_page_access_token;
+        } else {
+            console.log('not authenticated');
+        }
+    };
+    
+    
+    function checkLoginState() {
+      FB.getLoginStatus(function(response) {
+        statusChangeCallback(response);
+      });
+    }
+    
+    function testGetAPI(){
+        FB.api("/me/feed", function(response){
+            if (response && !response.error){
+                console.log(response);
+            }
+        })
+    }
+    
+     function testGetAPI2(){ //if you delete or add any app in Facebook this code will get an error !! MUST REVIEW IT !
+        FB.api("/me/accounts", function(response){
+            if (response && !response.error){
+                console.log("page :", response.data["0"].name);
+                console.log("access_token :", response.data["0"].access_token);
+                console.log("ALL OBJECT", response.data);
+                global_page_access_token = response.data["0"].access_token;
+                
+            }
+        })
+    }
+    
+    function testPostAPI(){
+        FB.api("/me/feed", 'post', {message: 'my first status from nodeJS'}, function(response){
+            if (response && !response.error){
+                console.log(response);
+            }
+        })
+    }
+    
+    function testPostAPI2(){
+        FB.api("/349975392082591_351540345259429/comments", 'post', {access_token: global_page_access_token , message: 'my first status from nodeJS in a reply to a comment from Marcos now!!!'}, function(response){
+            if (response && !response.error){
+                console.log(response.id);
+            } else console.log(response.error);
+        })
+    }
+    
+    function subscribeApp(page_id, page_access_token) {
+        console.log('Subscribing page to app! ' + page_id);
+        FB.api(
+            '/' + page_id + '/subscribed_apps',
+            'post',
+            {access_token: page_access_token},
+            function(response) {
+                console.log('Successfully subscribed page', response);
+                // insert in DB
+            });
+    }
+    
+ 
+
+</script>
+
+
+
+<fb:login-button 
+  scope="public_profile, email, publish_actions, manage_pages, publish_pages, user_posts, pages_messaging, pages_show_list, user_status "
+  onlogin="checkLoginState();">
+</fb:login-button>
+
+
+
+<% include partials/footer %>
