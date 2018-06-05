@@ -11,11 +11,6 @@ app.use(bodyParser.json());
 
 app.set("view engine", "ejs")
 
-app.use(express.static(__dirname + '/View'));
-//Store all HTML files in view folder.
-//app.use(express.static(__dirname + '/Script'));
-//Store all JS and CSS in Scripts folder.
-
 app.get("/home", function(req, res){
     res.render("home");
     console.log("home page");
